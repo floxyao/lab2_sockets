@@ -1,4 +1,4 @@
-// Server side C/C++ program to demonstrate Socket programming
+// Server side C/C++ program to demonstrate Socket programming using multithreads
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -11,27 +11,23 @@
 #define NUM_THREADS 2
 #define PORT 8080
 
-// using namespace std;
-
 //Function signatures
 void* receive_thread(void *arg);
 void* send_thread(void *arg);
 
+
 //global variables
 int server_fd, new_socket, valread;
 //server_fd integer to hold socket descriptor it contains information about our socket
-struct sockaddr_in address;
-int opt = 1;
-int addrlen = sizeof(address);
+// int opt = 1;
 char msg[50];
-//char buffer[1024] = {0};
 char buffer[1024] = {0};
-// char *hello = "Hello from server";
-
 
 
 int main(int argc, char const *argv[])
 {
+	struct sockaddr_in address;
+	int addrlen = sizeof(address);
 
 	pthread_t threads[NUM_THREADS];//array with pthread objects
 
@@ -95,22 +91,23 @@ int main(int argc, char const *argv[])
 	}
 
     //===================================================
-    // Send/Receive
+    // Send/Receive threads
     //===================================================
 
 		int rc;
 
 		//create threads
 		for(int i = 0; i < NUM_THREADS; i++){
-			if(i == 0){
+			if(i == 0){ //create sending thread
 				printf("main(): creating send thread \n");
 				rc = pthread_create(&threads[i], NULL, &send_thread, NULL);
+
 				if(rc){
 					printf("Error: unable to create thread, %d \n", rc);
 					exit(-1);
 				}
 			}
-			else{
+			else{ //create receiving thread
 				printf("main(): creating Receive thread \n");
 				rc = pthread_create(&threads[i], NULL, &receive_thread, NULL);
 				if(rc){
@@ -128,100 +125,49 @@ int main(int argc, char const *argv[])
 			}
 		}
 
-    // for(;;){
-    //     //wait for message in buffer (wait for message)
-		//
-    //     printf("client: ");
-    //     valread = read( new_socket , buffer, 1024);
-		//
-		// 		printf("valread: %d\n", valread);
-		//
-    //     //print buffer
-    //     printf("%s\n",buffer);
-		//
-    //     //put message in buffer (send message to client)
-    //     //printf(":");
-    //     //scanf ("%[^\n]%*c", msg);
-    //     //send(new_socket , msg , strlen(msg) , 0 );
-		//
-    //     //clean buffer
-    //     bzero(buffer, sizeof(buffer));
-    //     //add exit condition
-    // }
 
-		// for(;;){//testing purposes
-    //     //wait for message in buffer (wait for message)
-		// 		if(){
-    //     printf("client: ");
-    //     valread = read( new_socket , buffer, 1024);
-		//
-		// 		printf("valread: %d\n", valread);
-		//
-    //     //print buffer
-    //     printf("%s\n",buffer);
-		// 	}
-		// 	else(){
-		//
-    //     //put message in buffer (send message to client)
-    //     //printf(":");
-    //     //scanf ("%[^\n]%*c", msg);
-    //     //send(new_socket , msg , strlen(msg) , 0 );
-		// 	}
-
-        //clean buffer
-        // bzero(buffer, sizeof(buffer));
-        //add exit condition
-    // }
-
-    //valread = read( new_socket , buffer, 1024);
-    //printf("%s\n",buffer );
-    //send(new_socket , hello , strlen(hello) , 0 );
-    //printf("Hello message sent\n");
 	return 0;
 }
 
+
+//===============================================================================================
+//function:    receive_thread()
+//input(s):    arg
+//output(s):   none
+//description: This function specifies what the receiving thread will be doing
+//===============================================================================================
 void* receive_thread(void *arg){
 	for(;;){
 	    //wait for message in buffer (wait for message)
 
-	    // printf("\nclient: ");
 	    valread = read( new_socket , buffer, 1024);
 			if(valread < 0){
 					perror("Error: ");//check for error
 			}
 
-			if(valread == 0){
-				sleep(1);
-			}
-			else{
-				// printf("valread: %d\n", valread);
+		  //print buffer
+		  printf("\nClient: %s\n",buffer);
 
-		    //print buffer
-		    printf("\nClient: %s\n",buffer);
-				// printf("Message to send: ");
-
-		    //put message in buffer (send message to client)
-		    //printf(":");
-		    //scanf ("%[^\n]%*c", msg);
-		    //send(new_socket , msg , strlen(msg) , 0 );
-
-		    //clean buffer
-		    bzero(buffer, sizeof(buffer));
-		    //add exit condition
-			}
+		  //clean buffer
+		  bzero(buffer, sizeof(buffer));
+		  //add exit condition
+		// }
 
 	}
 }
 
+//===============================================================================================
+//function:    send_thread()
+//input(s):    arg
+//output(s):   none
+//description: This function specifies what the sending thread will be doing
+//===============================================================================================
 void* send_thread(void *arg){
 	int sc;
 	for(;;){
-		printf("Message to send: ");
+
 		scanf (" %[^\n]%*c", msg);
 
-		// if(msg[0] == '\0'){
-		// 	printf("Empty Message");
-		// }
 		if(msg[0] == ' '){
 			printf("msg length: %ld", strlen(msg));
 			printf("Empty Message");
@@ -233,7 +179,7 @@ void* send_thread(void *arg){
 			}
 			else{
 				printf("Message sent \n");
-				// bzero(msg, sizeof(msg));
+
 			}
 		}
 
